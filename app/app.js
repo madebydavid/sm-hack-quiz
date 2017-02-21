@@ -4,6 +4,8 @@ const session = require('express-session');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const morgan = require('morgan');
+const schema = require('jayschema');
+const normalise = require('jayschema-error-messages');
 
 const getRandomGUID = require('./lib/getRandomGUID');
 const getSimpleItem = require('./lib/getSimpleItem');
@@ -32,19 +34,17 @@ app.use(session({
     cookie: { maxAge: (365 * 24 * 3600 * 1000) } // sessions last 365 days
 }));
 
-
 /**
  * Starts / restarts a session
  */
 app.get('/api/start', (req, res, next) => {
-
-    if (req.session) {
-        req.session.destroy();
-
+    // new session
+    req.session.regenerate(() => {
+        // reset the score
+        req.session.score = 0;
         res.status(200).json({'status': 'ok'});
         return next();
-    }
-
+    });
 });
 
 /**
@@ -103,7 +103,55 @@ app.get('/api/questions', (req, res, next) => {
  */
 app.post('/api/questions/:questionGUID', (req, res, next) => {
 
+    let correctAnswers = req.session.correctAnswers;
 
+    if (!correctAnswers.hasOwnProperty(req.params.questionGUID)) {
+        res.status(403).json({
+            error: 'unknown question'
+        });
+        return next();  
+    }
+
+    const jsonValidator = new schema();
+    const errors = jsonValidator.validate(
+        req.body,
+        {
+            'type': 'object',
+            'properties': {
+                'id': { type: 'string' },
+            },
+            'required': [ 'id' ],
+            'additionalProperties': false
+        }
+    );
+
+    if (0 !== errors.length) {
+        res.status(400).json({
+            'error': 'invalid JSON supplied',
+            'validation': normalise(errors).fields
+        });
+        return next();
+    }
+
+    if (correctAnswers[req.params.questionGUID] == req.body.id) {
+        req.session.score++;
+    }
+
+    res.status(200).json({
+        score: req.session.score
+    });
+    return next();
+
+});
+
+/**
+ * For getting the users score
+ */
+app.get('/api/score', (req, res, next) => {
+    res.status(200).json({
+        score: req.session.score
+    });
+    return next();
 
 });
 

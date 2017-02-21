@@ -42,7 +42,9 @@ app.get('/api/start', (req, res, next) => {
     req.session.regenerate(() => {
         // reset the score
         req.session.score = 0;
-        res.status(200).json({'status': 'ok'});
+        res.status(200).json({
+            score: req.session.score
+        });
         return next();
     });
 });

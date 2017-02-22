@@ -113,10 +113,16 @@ app.post('/api/questions/:questionGUID/:answerID', (req, res, next) => {
     }
 
     let answer = req.params.answerID;
+console.log(answer);
+
     let isCorrect = false;
+console.log(correctAnswers);
 
     if (correctAnswers) {
         if (correctAnswers.hasOwnProperty(req.params.questionGUID)) {
+
+console.log(isCorrect);
+
              isCorrect = (correctAnswers[req.params.questionGUID] == answer); 
         }
     }

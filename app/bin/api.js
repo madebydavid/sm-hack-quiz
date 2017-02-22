@@ -25,3 +25,20 @@ server.on('listening', () => {
     console.log('Listening');
 });
 
+var redis = require('redis');
+var redisClient = redis.createClient();
+
+redisClient.on('connect', function() {
+     console.log('Websocket - Connected to redis');
+     console.log('Websocket - Setting redis max listeners');
+     redisClient.setMaxListeners(0);
+});
+
+
+var io = require('socket.io').listen(server);
+
+io.sockets.on('connection', function(socket) {
+    socket.on('room', function(room) {
+        socket.join(room);
+    });
+});

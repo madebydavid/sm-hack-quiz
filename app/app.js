@@ -14,9 +14,11 @@ const getSimpleItem = require('./lib/getSimpleItem');
 var app = express();
 
 // allow decoding json from a text-plain so we can avoid cors issues
-app.use(bodyParser.json({ type: '*/*' })); 
-app.use(bodyParser.urlencoded({ extended: false }));
+//app.use(bodyParser.json({ type: '*/*' })); 
+//app.use(bodyParser.urlencoded({ extended: false }));
 
+app.use(bodyParser.json());       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded()); // to support URL-encoded bodies
 // logging
 app.use(morgan('combined'));
 
@@ -107,35 +109,32 @@ app.post('/api/questions/:questionGUID', (req, res, next) => {
 
     let correctAnswers = req.session.correctAnswers;
 
-    if (!correctAnswers.hasOwnProperty(req.params.questionGUID)) {
-        res.status(403).json({
-            error: 'unknown question'
-        });
-        return next();  
-    }
-
-    const jsonValidator = new schema();
-    const errors = jsonValidator.validate(
-        req.body,
-        {
-            'type': 'object',
-            'properties': {
-                'id': { type: 'string' },
-            },
-            'required': [ 'id' ],
-            'additionalProperties': false
+    if (correctAnswers) {
+        if (!correctAnswers.hasOwnProperty(req.params.questionGUID)) {
+            res.status(403).json({
+                error: 'unknown question'
+            });
+            return next();  
         }
-    );
-
-    if (0 !== errors.length) {
-        res.status(400).json({
-            'error': 'invalid JSON supplied',
-            'validation': normalise(errors).fields
-        });
-        return next();
     }
 
-    let isCorrect = (correctAnswers[req.params.questionGUID] == req.body.id); 
+    let raw = {
+        id: null
+    }
+
+    let isCorrect = false;
+
+    try {
+        raw = JSON.parse(req.body);
+    } catch (e) {
+        // nothing
+    }
+
+    if (correctAnswers) {
+        if (correctAnswers.hasOwnProperty(req.params.questionGUID)) {
+             isCorrect = (correctAnswers[req.params.questionGUID] == raw.id); 
+        }
+    }
 
     if (isCorrect) {
         req.session.score++;
@@ -143,7 +142,7 @@ app.post('/api/questions/:questionGUID', (req, res, next) => {
 
     res.status(200).json({
         correct: isCorrect,
-        score: req.session.score
+        score: req.session.score || 0
     });
     return next();
 

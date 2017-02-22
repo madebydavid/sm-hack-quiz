@@ -11,6 +11,7 @@ apt-get install -y unzip
 apt-get install -y git
 apt-get install -y vim
 
+apt-get install -y redis
 
 # bash config
 cat > /etc/profile.d/00-aliases.sh <<EOT

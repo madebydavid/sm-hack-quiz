@@ -11,6 +11,7 @@ apt-get install -y unzip
 apt-get install -y git
 apt-get install -y vim
 
+
 # bash config
 cat > /etc/profile.d/00-aliases.sh <<EOT
 alias ll='ls -l'
@@ -48,3 +49,7 @@ server {
 EOF
 
 service nginx restart
+
+# ruby and sass
+apt-get install -y ruby
+gem install sass

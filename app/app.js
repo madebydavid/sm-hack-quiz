@@ -135,11 +135,14 @@ app.post('/api/questions/:questionGUID', (req, res, next) => {
         return next();
     }
 
-    if (correctAnswers[req.params.questionGUID] == req.body.id) {
+    let isCorrect = (correctAnswers[req.params.questionGUID] == req.body.id); 
+
+    if (isCorrect) {
         req.session.score++;
     }
 
     res.status(200).json({
+        correct: isCorrect,
         score: req.session.score
     });
     return next();

@@ -114,6 +114,7 @@ app.post('/api/questions/:questionGUID/:answerID', (req, res, next) => {
 
     let answer = req.params.answerID;
 console.log(answer);
+console.log(req.session);
 
     let isCorrect = false;
 console.log(correctAnswers);

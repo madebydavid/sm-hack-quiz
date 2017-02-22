@@ -84,6 +84,7 @@ app.get('/api/questions', (req, res, next) => {
                 id: item.id,
                 image: item.image
             })),
+            correctId: correctItem.id,
             text: correctItem.description,
             title: 'Not sure what goes here'
         });
